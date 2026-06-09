@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Intersection Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .subtitle { color: #888; margin-bottom: 48px; font-size: 1rem; }
+
+    .card {
+      background: #1a1d26;
+      border: 1px solid #2e3244;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 520px;
+      text-align: center;
+    }
+    .upload-area {
+      border: 2px dashed #3a4060;
+      border-radius: 12px;
+      padding: 40px 20px;
+      margin-bottom: 24px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-area:hover { border-color: #5b8af5; background: #1e2235; }
+    .upload-area .icon { font-size: 3rem; margin-bottom: 12px; }
+    .upload-area p { color: #777; font-size: 0.95rem; }
+    .upload-area p strong { color: #aaa; }
+    #file-input { display: none; }
+    #file-name {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #5b8af5;
+      min-height: 20px;
+    }
+    .btn {
+      display: inline-block;
+      background: #5b8af5;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 40px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      width: 100%;
+    }
+    .btn:hover { background: #4a75e0; transform: translateY(-1px); }
+    .btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
+
+    .zones-info {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+    .zone-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>Traffic Intersection Analyzer</h1>
+  <p class="subtitle">Upload a video to detect and count waiting vehicles by direction</p>
+
+  <div class="card">
+    <form action="/upload" method="POST" enctype="multipart/form-data" id="upload-form">
+      <div class="upload-area" onclick="document.getElementById('file-input').click()">
+        <div class="icon">🎬</div>
+        <p><strong>Click to select a video file</strong></p>
+        <p>MP4 supported</p>
+        <div id="file-name"></div>
+      </div>
+      <input type="file" id="file-input" name="video" accept="video/*" onchange="handleFile(this)">
+      <button type="submit" class="btn" id="submit-btn" disabled>Start Analysis</button>
+    </form>
+
+    <div class="zones-info">
+      <span class="zone-badge" style="background:#1a2e4a;color:#4A90D9;">N_WAIT</span>
+      <span class="zone-badge" style="background:#2e2510;color:#E8A838;">S_WAIT</span>
+      <span class="zone-badge" style="background:#112e1a;color:#4CAF50;">E_WAIT</span>
+      <span class="zone-badge" style="background:#221535;color:#9C5DDB;">W_WAIT</span>
+    </div>
+  </div>
+
+  <script>
+    function handleFile(input) {
+      const btn = document.getElementById('submit-btn');
+      const label = document.getElementById('file-name');
+      if (input.files.length > 0) {
+        label.textContent = '✓ ' + input.files[0].name;
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

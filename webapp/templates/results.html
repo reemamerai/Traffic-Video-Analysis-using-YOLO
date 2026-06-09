@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results | Traffic Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      padding: 30px 20px 60px;
+    }
+    .header {
+      max-width: 1100px;
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    h1 { font-size: 1.9rem; font-weight: 700; color: #fff; }
+    .btn {
+      background: #5b8af5;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #4a75e0; }
+
+    .section {
+      max-width: 1100px;
+      margin: 0 auto 36px;
+    }
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: #1a1d26;
+      border: 1px solid #2e3244;
+      border-radius: 14px;
+      padding: 24px;
+    }
+
+    /* Summary cards */
+    .zone-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 700px) { .zone-grid { grid-template-columns: 1fr 1fr; } }
+    .zone-stat {
+      border-radius: 14px;
+      padding: 24px 16px;
+      text-align: center;
+    }
+    .zone-stat .zone-name { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .zone-stat .stat-row { margin: 6px 0; }
+    .zone-stat .stat-val { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+    .zone-stat .stat-label { font-size: 0.75rem; color: #777; }
+
+    /* Video */
+    video {
+      width: 100%;
+      border-radius: 10px;
+      background: #000;
+    }
+
+    /* Charts */
+    .plots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+    }
+    .plot-card {
+      background: #1a1d26;
+      border: 1px solid #2e3244;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: zoom-in;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .plot-card:hover { border-color: #5b8af5; transform: translateY(-2px); }
+    .plot-card img { width: 100%; display: block; }
+    .plot-card .plot-label {
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      color: #666;
+      border-top: 1px solid #2e3244;
+    }
+
+    /* Modal */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      cursor: zoom-out;
+    }
+    #modal-overlay.open { display: flex; }
+    #modal-overlay img {
+      max-width: 92vw;
+      max-height: 88vh;
+      border-radius: 10px;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.7);
+      cursor: default;
+    }
+    #modal-close {
+      position: fixed;
+      top: 18px;
+      right: 22px;
+      font-size: 2rem;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 1;
+      background: none;
+      border: none;
+      transition: color 0.15s;
+    }
+    #modal-close:hover { color: #fff; }
+
+    .meta { color: #555; font-size: 0.88rem; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1> Analysis Complete</h1>
+    <a href="/" class="btn">← Analyze New Video</a>
+  </div>
+
+  <!-- Summary counts -->
+  <div class="section">
+    <div class="section-title">Waiting Zone Summary</div>
+    <div class="zone-grid">
+      {% set colors = {
+        'N_WAIT': {'bg':'#1a2e4a','fg':'#4A90D9'},
+        'S_WAIT': {'bg':'#2e2510','fg':'#E8A838'},
+        'E_WAIT': {'bg':'#112e1a','fg':'#4CAF50'},
+        'W_WAIT': {'bg':'#221535','fg':'#9C5DDB'}
+      } %}
+      {% for zone, stats in summary.items() %}
+      <div class="zone-stat" style="background:{{ colors[zone].bg }};">
+        <div class="zone-name" style="color:{{ colors[zone].fg }};">{{ zone }}</div>
+        <div class="stat-row">
+          <div class="stat-val" style="color:{{ colors[zone].fg }};">{{ stats.max }}</div>
+          <div class="stat-label">peak vehicles</div>
+        </div>
+        <div class="stat-row" style="margin-top:10px;">
+          <div style="font-size:1.2rem;font-weight:700;color:{{ colors[zone].fg }};">{{ stats.avg }}</div>
+          <div class="stat-label">avg per frame</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="meta">Total frames processed: {{ total_frames }}</p>
+  </div>
+
+  <!-- Annotated video -->
+  <div class="section">
+    <div class="section-title">Annotated Output Video</div>
+    <div class="card">
+      <video controls>
+        <source src="/static/outputs/annotated_output.mp4" type="video/mp4">
+        Your browser does not support video playback.
+      </video>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  {% if plots %}
+  <div class="section">
+    <div class="section-title">Analytics Charts</div>
+    <div class="plots-grid">
+      {% set labels = {
+        'timeseries.png': 'Vehicle counts over time (smoothed)',
+        'averages.png':   'Average waiting vehicles per direction',
+        'peaks.png':      'Peak congestion per direction'
+      } %}
+      {% for plot in plots %}
+      <div class="plot-card" onclick="openModal('/static/plots/{{ plot }}')">
+        <img src="/static/plots/{{ plot }}" alt="{{ plot }}">
+        <div class="plot-label">{{ labels.get(plot, plot) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Modal -->
+  <div id="modal-overlay" onclick="closeModal()">
+    <button id="modal-close" onclick="closeModal()">&#x2715;</button>
+    <img id="modal-img" src="" alt="Chart" onclick="event.stopPropagation()">
+  </div>
+
+  <script>
+    function openModal(src) {
+      document.getElementById('modal-img').src = src;
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+  </script>
+</body>
+</html>
