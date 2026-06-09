@@ -1,0 +1,10 @@
+models/
+videos/
+outputs/
+
+*.pt
+*.pth
+*.onnx
+
+*.mp4
+*.avi
